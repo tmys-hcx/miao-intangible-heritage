@@ -1,0 +1,64 @@
+server:
+  port: 8016
+spring:
+  application:
+    name: mic-notice #服务名
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      # 配置中心（毕设模拟演示）
+      config:
+        enabled: true
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        namespace: ${NACOS_NAMESPACE:} #配置中心命名空间ID，按需填写（留空则使用 public）
+        import-check:
+          enabled: false #未接入Nacos配置中心：禁用导入检查，否则启动报No spring.config.import错误
+      # 服务发现（统一 public 命名空间：其他服务均注册在 public，跨服务 Feign 按服务名调用需同命名空间）
+      discovery:
+        server-addr: 127.0.0.1:8848 #nacos地址（已启动Nacos，启用服务注册发现）
+  # mysql数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/miao_intangible_heritage?serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456} #本地演示库密码，实际部署请通过环境变量覆盖
+    hikari:
+      # 多服务共享远程库：收紧连接池，避免总连接数打满 max_connections（默认每服务 10 个常驻连接）
+      maximum-pool-size: 5 # 单服务最大连接数
+      minimum-idle: 1 # 最小空闲连接数（默认等于最大池大小，会常驻 10 个连接）
+      connection-timeout: 5000 # 获取连接超时 5s（默认 30s，快速失败便于定位）
+      idle-timeout: 60000 # 空闲连接 60s 后回收
+      max-lifetime: 1800000 # 连接最长存活 30 分钟（避免复用服务端已关闭的死连接）
+  # RabbitMQ：消费订单通知消息（mic-goods 生产，异步解耦落库 notification 表；拓扑声明见 RabbitMqConfig）
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    listener:
+      simple:
+        # 消费失败自动重试：3 次耗尽后 reject（不重新入队），消息经死信交换机进入死信队列（NoticeMqConsumer 告警）
+        retry:
+          enabled: true
+          max-attempts: 3
+  # redis
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 2
+    #  cloud:
+    #    sentinel:
+    #      eager: true
+    #      transport:
+    #        port: 9966  #随便定义一个不重复端口即可
+    #        dashboard: 127.0.0.1:9999 #sentinel控制台端口 启动sentinel控制台时指定
+    #ribbon: #  ConnectTimeout: 2000 # 请求连接的超时时间 #  ReadTimeout: 5000 # 请求处理的超时时间 #service-product: # 调用的提供者的名称 #  ribbon: #    NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.mic.notice.model.entity
+  configuration:
+    map-underscore-to-camel-case: true #下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #打印sql日志

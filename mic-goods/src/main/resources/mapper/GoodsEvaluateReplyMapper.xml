@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  商品评价追问/回复 SQL 映射
+  说明：自定义 SQL 不经过 @TableLogic 拦截，需手动过滤 is_deleted = 0
+-->
+<mapper namespace="com.mic.goods.mapper.GoodsEvaluateReplyMapper">
+
+    <!--
+      按评价ID集合批量查询追问/回复（一次查询避免逐条循环）：
+      - 仅未删除记录，LEFT JOIN sys_user（同库）填充瞬态字段 userNickname
+      - 二次 LEFT JOIN sys_user 填充 replyToNickname（展示"回复 某人"）
+      - 排序：创建时间正序（先追问后回复的对话顺序）；层级由 parent_reply_id 在服务端组装
+    -->
+    <select id="selectByEvaluateIds" resultType="com.mic.goods.model.entity.GoodsEvaluateReply">
+        SELECT r.*, u.nickname AS user_nickname, ru.nickname AS reply_to_nickname
+        FROM goods_evaluate_reply r
+        LEFT JOIN sys_user u ON u.id = r.user_id AND u.is_deleted = 0
+        LEFT JOIN sys_user ru ON ru.id = r.reply_to_user_id AND ru.is_deleted = 0
+        WHERE r.is_deleted = 0
+          AND r.evaluate_id IN
+        <foreach collection="evaluateIds" item="evaluateId" open="(" separator="," close=")">
+            #{evaluateId}
+        </foreach>
+        ORDER BY r.create_time ASC, r.id ASC
+    </select>
+</mapper>

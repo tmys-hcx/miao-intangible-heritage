@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  非遗商品 SQL 映射
+  说明：自定义 SQL 不经过 @TableLogic 拦截，需手动过滤 is_deleted = 0
+-->
+<mapper namespace="com.mic.goods.mapper.IntangibleGoodsMapper">
+
+    <!--
+      前台商品分页：
+      - 仅已审核商品（status = 1）
+      - 支持分类筛选（categoryId）+ 名称/描述模糊搜索（keyword）
+      - 关键词命中分类（categoryIds，服务层解析：一级分类名带出其全部二级子分类）：分类下的商品同样命中
+      - 排序：hot=true 按销量（goods_order_item 明细订单数，排除已取消/已退款）倒序；否则默认按创建时间倒序
+    -->
+    <select id="selectGoodsPage" resultType="com.mic.goods.model.entity.IntangibleGoods">
+        SELECT g.*
+        FROM intangible_goods g
+        LEFT JOIN (
+            SELECT oi.goods_id, COUNT(*) AS sale_count
+            FROM goods_order_item oi
+            INNER JOIN goods_order o ON o.id = oi.order_id
+            WHERE oi.is_deleted = 0
+              AND o.is_deleted = 0
+              AND o.order_status NOT IN (4, 5)
+            GROUP BY oi.goods_id
+        ) o ON o.goods_id = g.id
+        WHERE g.is_deleted = 0
+          AND g.status = 1
+        <if test="categoryId != null">
+            AND g.category_id = #{categoryId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (g.goods_name LIKE CONCAT('%', #{keyword}, '%')
+                OR g.goods_desc LIKE CONCAT('%', #{keyword}, '%')
+                <if test="categoryIds != null and categoryIds.size() > 0">
+                    OR g.category_id IN
+                    <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
+                        #{cid}
+                    </foreach>
+                </if>
+            )
+        </if>
+        <choose>
+            <when test="hot">
+                ORDER BY IFNULL(o.sale_count, 0) DESC, g.create_time DESC, g.id DESC
+            </when>
+            <otherwise>
+                ORDER BY g.create_time DESC, g.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--
+      前台最新上架商品推荐（不分页）：
+      - 仅已审核商品（status = 1），按发布时间（create_time）倒序取前 N 条
+      - 支持分类筛选（categoryId）+ 名称/描述模糊搜索（keyword）
+      - 关键词命中分类（categoryIds，服务层解析：一级分类名带出其全部二级子分类）：分类下的商品同样命中
+    -->
+    <select id="selectLatestGoods" resultType="com.mic.goods.model.entity.IntangibleGoods">
+        SELECT g.*
+        FROM intangible_goods g
+        WHERE g.is_deleted = 0
+          AND g.status = 1
+        <if test="categoryId != null">
+            AND g.category_id = #{categoryId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (g.goods_name LIKE CONCAT('%', #{keyword}, '%')
+                OR g.goods_desc LIKE CONCAT('%', #{keyword}, '%')
+                <if test="categoryIds != null and categoryIds.size() > 0">
+                    OR g.category_id IN
+                    <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
+                        #{cid}
+                    </foreach>
+                </if>
+            )
+        </if>
+        ORDER BY g.create_time DESC, g.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <!--
+      后台商品分页（管理端审核列表）：
+      - 全部商品（含待审核 / 已拒绝），auditStatus 为空查全部
+      - LEFT JOIN sys_user（同库）关联发布人账号，填充瞬态字段 publisherAccount
+    -->
+    <select id="selectAdminGoodsPage" resultType="com.mic.goods.model.entity.IntangibleGoods">
+        SELECT g.*, u.account AS publisher_account
+        FROM intangible_goods g
+        LEFT JOIN sys_user u ON u.id = g.publisher_id AND u.is_deleted = 0
+        WHERE g.is_deleted = 0
+        <if test="auditStatus != null">
+            AND g.status = #{auditStatus}
+        </if>
+        ORDER BY g.create_time DESC, g.id ASC
+    </select>
+</mapper>

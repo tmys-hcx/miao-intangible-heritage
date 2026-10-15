@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  商品订单 SQL 映射
+  说明：自定义 SQL 不经过 @TableLogic 拦截，需手动过滤 is_deleted = 0
+-->
+<mapper namespace="com.mic.goods.mapper.GoodsOrderMapper">
+
+    <!--
+      后台订单分页（管理端订单管理）：
+      - 全部用户订单（含全部状态），orderStatus 为空查全部
+      - keyword 非空时模糊匹配订单编号或下单人账号
+      - LEFT JOIN sys_user（同库）关联下单人账号，填充瞬态字段 userAccount
+    -->
+    <select id="selectAdminOrderPage" resultType="com.mic.goods.model.entity.GoodsOrder">
+        SELECT o.*, u.account AS user_account
+        FROM goods_order o
+        LEFT JOIN sys_user u ON u.id = o.user_id AND u.is_deleted = 0
+        WHERE o.is_deleted = 0
+        <if test="orderStatus != null">
+            AND o.order_status = #{orderStatus}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (o.order_no LIKE CONCAT('%', #{keyword}, '%')
+                OR u.account LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY o.create_time DESC, o.id DESC
+    </select>
+</mapper>

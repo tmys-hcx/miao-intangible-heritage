@@ -1,0 +1,72 @@
+server:
+  port: 8048
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false #未接入Nacos配置中心：禁用导入检查，否则启动报No spring.config.import错误
+      discovery:
+        server-addr: 127.0.0.1:8848 #nacos地址（已启动Nacos，启用服务注册发现；路由经 lb:// 按服务名转发）
+    gateway:
+      routes:
+        # 用户服务路由：验证码、注册、登录、用户信息、轮播、资讯
+        # 经 Nacos 服务发现转发（lb://mic-user，原直连 8046）
+        - id: mic-user-route
+          uri: lb://mic-user
+          predicates:
+            - Path=/api/user/** # 路径与控制器/api/user映射一致，网关原样转发，无需剥离前缀
+        # 商品服务路由：商品分类、商品、购物车、订单、评价
+        # 经 Nacos 服务发现转发（lb://mic-goods，原直连 8044）
+        - id: mic-goods-route
+          uri: lb://mic-goods
+          predicates:
+            - Path=/api/goods/** # 路径与控制器/api/goods映射一致，网关原样转发，无需剥离前缀
+        # 文件服务路由：图片/视频上传至阿里云OSS
+        # 暂直连mic-file(8047)（尚未接入Nacos）；接入后改为 uri: lb://mic-file
+        - id: mic-file-route
+          uri: http://127.0.0.1:8047
+          predicates:
+            - Path=/api/file/** # 路径与控制器/api/file映射一致，网关原样转发，无需剥离前缀
+        # 文化服务路由：非遗文化资料（发布/修改/删除等）
+        # 经 Nacos 服务发现转发（lb://mic-culture，原直连 8032）
+        - id: mic-culture-route
+          uri: lb://mic-culture
+          predicates:
+            - Path=/api/culture/** # 路径与控制器/api/culture映射一致，网关原样转发，无需剥离前缀
+        # 传承预约服务路由：非遗传承信息（视频学习/论坛/访谈资料/知识窗口）、预约学习
+        # 经 Nacos 服务发现转发（lb://mic-inherit-reserve，原直连 8045）
+        - id: mic-inherit-reserve-route
+          uri: lb://mic-inherit-reserve
+          predicates:
+            - Path=/api/inherit/** # 路径与控制器/api/inherit映射一致，网关原样转发，无需剥离前缀
+        # 通知服务路由：我的通知列表查询 / 标记已读（登录用户）
+        # 经 Nacos 服务发现转发（lb://mic-notice，原直连 8016）
+        - id: mic-notice-route
+          uri: lb://mic-notice
+          predicates:
+            - Path=/api/notice/** # 路径与控制器/api/notice映射一致，网关原样转发，无需剥离前缀
+        # 智能助手服务路由：传承与学习助手（资料检索问答 / 多轮对话）、购物助手（接入中）
+        # 经 Nacos 服务发现转发（lb://mic-agent，原直连 8042）
+        - id: mic-agent-route
+          uri: lb://mic-agent
+          predicates:
+            - Path=/api/agent/** # 路径与控制器/api/agent映射一致，网关原样转发，无需剥离前缀
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 127.0.0.1:8848 #nacos服务地址
+#    gateway:
+#      discovery:
+#        locator:
+#          enabled: true
+#      routes: # 路由数组[路由 就是指定当请求满足什么条件的时候转到哪个微服务]
+#        - id: order_route # 当前路由的标识, 要求唯一
+#          uri: lb://service-order # lb指的是从nacos中按照名称获取微服务,并遵循负载均衡策略
+#          order: 1 # 路由的优先级,数字越小级别越高
+#          predicates: # 断言(就是路由转发要满足的条件)
+#            - Path=/order-serv/** # 当请求路径满足Path指定的规则时,才进行路由转发
+#          filters: #过滤器,请求在传递过程中可以通过过滤器对其进行一定的修改
+#            - StripPrefix=1 # 转发之前去掉1层路径

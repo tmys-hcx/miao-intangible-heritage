@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>调色板 · 九色</title>
+  <style>
+    /* ============================================================
+       调色板 · 九色方块（调色试验用，随手改色值即可）
+
+       调色方法：修改下方 :root 里的 --c1 ~ --c9 九个色值，保存后刷新页面即所见；
+       色值支持任意 CSS 颜色写法（#hex / rgb() / hsl() 均可）。
+
+       初始九色取自项目系统色（mic/src/assets/styles/theme.css）：
+         c1 苗绣酒红 --miao-red        c2 靛蓝 --miao-indigo       c3 鎏金 --miao-gold
+         c4 木棕 --miao-wood           c5 宣纸 --miao-paper        c6 墨 --miao-ink
+         c7 薄荷青 --culture-jade      c8 藕粉 --culture-wheat     c9 深青墨 --culture-ink
+       ============================================================ */
+    :root {
+      --c1: #b7e5f3;
+      --c2: #203864;
+      --c3: #1463a1;
+      --c4: #3999cc;
+      --c5: #4c9c7c;
+      --c6: #80ccc9;
+      --c7: #88bdb6;
+      --c8: #ead13c;
+      --c9: #2b5350;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      padding: 44px 24px;
+      /* 中性底色与灰字：不带任何色彩倾向，避免干扰对配色的判断 */
+      background: #fafafa;
+      color: #333;
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    }
+    .pad__head {
+      text-align: center;
+    }
+    .pad__title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+    }
+    .pad__hint {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: #999;
+    }
+    .pad__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      width: min(840px, 100%);
+    }
+    .swatch {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .swatch__block {
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.4);
+    }
+    .swatch__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .swatch__label {
+      color: #999;
+      letter-spacing: 0.06em;
+    }
+    .swatch__hex {
+      font-family: Consolas, 'Courier New', monospace;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <header class="pad__head">
+    <h1 class="pad__title">调色板 · 九色</h1>
+    <p class="pad__hint">修改本文件顶部 :root 中的 --c1 ~ --c9 色值，保存后刷新页面查看效果</p>
+  </header>
+
+  <div class="pad__grid">
+    <div class="swatch" data-c="--c1">
+      <div class="swatch__block" style="background: var(--c1)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c1 · 酒红</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c2">
+      <div class="swatch__block" style="background: var(--c2)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c2 · 靛蓝</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c3">
+      <div class="swatch__block" style="background: var(--c3)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c3 · 鎏金</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c4">
+      <div class="swatch__block" style="background: var(--c4)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c4 · 木棕</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c5">
+      <div class="swatch__block" style="background: var(--c5)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c5 · 宣纸</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c6">
+      <div class="swatch__block" style="background: var(--c6)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c6 · 墨</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c7">
+      <div class="swatch__block" style="background: var(--c7)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c7 · 薄荷青</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c8">
+      <div class="swatch__block" style="background: var(--c8)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c8 · 藕粉</span><span class="swatch__hex"></span></div>
+    </div>
+    <div class="swatch" data-c="--c9">
+      <div class="swatch__block" style="background: var(--c9)"></div>
+      <div class="swatch__meta"><span class="swatch__label">c9 · 深青墨</span><span class="swatch__hex"></span></div>
+    </div>
+  </div>
+
+  <script>
+    // 每块下方自动标注当前色值：读取 :root 中对应变量，改值刷新后文字同步
+    const rootStyles = getComputedStyle(document.documentElement);
+    document.querySelectorAll('.swatch').forEach((swatch) => {
+      const value = rootStyles.getPropertyValue(swatch.dataset.c).trim();
+      swatch.querySelector('.swatch__hex').textContent = value;
+    });
+  </script>
+</body>
+</html>

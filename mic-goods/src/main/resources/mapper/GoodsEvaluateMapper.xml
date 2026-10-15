@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  商品评价 SQL 映射
+  说明：自定义 SQL 不经过 @TableLogic 拦截，需手动过滤 is_deleted = 0
+-->
+<mapper namespace="com.mic.goods.mapper.GoodsEvaluateMapper">
+
+    <!--
+      商品评价分页（详情页展示区）：
+      - 仅未删除评价，goodsId 为空查全部评价
+      - LEFT JOIN sys_user（同库）关联评价人昵称，填充瞬态字段 userNickname（展示"nickname：内容"）
+      - 排序：创建时间倒序
+    -->
+    <select id="selectEvaluatePage" resultType="com.mic.goods.model.entity.GoodsEvaluate">
+        SELECT e.*, u.nickname AS user_nickname
+        FROM goods_evaluate e
+        LEFT JOIN sys_user u ON u.id = e.user_id AND u.is_deleted = 0
+        WHERE e.is_deleted = 0
+        <if test="goodsId != null">
+            AND e.goods_id = #{goodsId}
+        </if>
+        ORDER BY e.create_time DESC, e.id DESC
+    </select>
+</mapper>

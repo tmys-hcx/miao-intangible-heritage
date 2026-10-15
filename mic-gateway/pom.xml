@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.mic</groupId>
+        <artifactId>mic-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>mic-gateway</artifactId>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+    <!-- SpringCloud Gateway 核心（不要引入spring-boot-starter-web） -->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+    <!-- Nacos 注册中心 + 配置中心 -->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+    </dependency>
+    <!-- 客户端负载均衡：网关 lb:// 路由按服务名转发必需（SCA 2021+ 移除 Ribbon，nacos-discovery 中该依赖为 optional 不传递） -->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+    </dependency>
+    <!-- 公共模块（排除 web starter：网关是 WebFlux 应用，Servlet 栈的 Spring MVC 与其互斥；
+         排除 mybatis-plus：网关无需数据库，避免其传递的 spring-boot-starter-jdbc 触发 DataSource 自动配置；
+         排除 redis：网关无缓存需求，避免 Redis 自动配置无谓创建连接工厂；
+         排除 knife4j：接口文档由各业务服务提供，避免 springdoc 在 WebFlux 环境下干扰） -->
+    <dependency>
+        <groupId>com.mic</groupId>
+        <artifactId>mic-common</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <!-- lombok -->
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <optional>true</optional>
+    </dependency>
+    </dependencies>
+</project>

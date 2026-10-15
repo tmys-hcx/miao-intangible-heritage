@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$APPLICATION_HOME_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$APPLICATION_HOME_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-agent/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-agent/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-chat/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-chat/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-common/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-culture/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-culture/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-file/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-file/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-gateway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-goods/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-goods/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-inherit-reserve/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-inherit-reserve/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-notice/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-notice/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-user/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mic-user/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

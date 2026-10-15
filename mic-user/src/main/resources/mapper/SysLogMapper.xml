@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  系统日志 SQL 映射
+  说明：自定义 SQL 不经过 @TableLogic 拦截，需手动过滤 is_deleted = 0
+-->
+<mapper namespace="com.mic.user.mapper.SysLogMapper">
+
+    <!--
+      系统日志分页（管理端系统日志）：
+      - 全部操作日志，keyword 非空时模糊匹配操作模块或操作人账号
+      - LEFT JOIN sys_user（同库）关联操作人账号，填充瞬态字段 userAccount
+    -->
+    <select id="selectLogPage" resultType="com.mic.user.model.vo.SysLogVO">
+        SELECT l.id, l.operate_user_id, u.account AS user_account, l.operate_module,
+               l.operate_content, l.ip, l.create_time
+        FROM sys_log l
+        LEFT JOIN sys_user u ON u.id = l.operate_user_id AND u.is_deleted = 0
+        WHERE l.is_deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (l.operate_module LIKE CONCAT('%', #{keyword}, '%')
+                OR u.account LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY l.create_time DESC, l.id DESC
+    </select>
+</mapper>

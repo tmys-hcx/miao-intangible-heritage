@@ -1,0 +1,113 @@
+server:
+  port: 8042
+spring:
+  application:
+    name: mic-agent #服务名
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false #未接入Nacos配置中心：禁用导入检查，否则启动报No spring.config.import错误
+      discovery:
+        server-addr: 127.0.0.1:8848 #nacos地址（统一public命名空间，跨服务Feign按服务名调用需同命名空间）
+    # OpenFeign远程调用：连接与读取超时收紧，避免被调服务异常时拖慢Agent接口；
+    # logger-level=basic：打印方法 / URL / 响应状态码 / 耗时，跨服务调用失败时便于在日志中直接定位
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+            logger-level: basic
+  # mysql数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/miao_intangible_heritage?serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456} #本地演示库密码，实际部署请通过环境变量覆盖
+    hikari:
+      # 多服务共享远程库：收紧连接池，避免总连接数打满 max_connections（默认每服务 10 个常驻连接）
+      maximum-pool-size: 5 # 单服务最大连接数
+      minimum-idle: 1 # 最小空闲连接数（默认等于最大池大小，会常驻 10 个连接）
+      connection-timeout: 5000 # 获取连接超时 5s（默认 30s，快速失败便于定位）
+      idle-timeout: 60000 # 空闲连接 60s 后回收
+      max-lifetime: 1800000 # 连接最长存活 30 分钟（避免复用服务端已关闭的死连接）
+  # redis（database 2 与其他服务保持一致）
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 2
+  # 禁用 langchain4j OpenAi 自动装配（dev.langchain4j.openai.spring.AutoConfig）：
+  # 其模型 Bean 无 @ConditionalOnMissingBean 退让，曾导致“Bean 缺失 / 同名冲突”两类启动失败；
+  # 对话模型改由 com.mic.agent.config.ChatModelConfig 显式装配（版本线 1.10.0‑beta18，兼容 Spring Boot 3.3.4，见根 pom 注释）
+  autoconfigure:
+    exclude:
+      - dev.langchain4j.openai.spring.AutoConfig
+
+# 大模型接入（LangChain4j，OpenAI 兼容协议 → DeepSeek）：基础问答骨架使用
+# api-key 从环境变量读取（本地开发也可在 idea 运行配置或启动命令中设置 DEEPSEEK_API_KEY / DASHSCOPE_API_KEY）
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.deepseek.com/v1
+      api-key: ${DEEPSEEK_API_KEY:sk-YOUR_DEEPSEEK_API_KEY} #DeepSeek 控制台申请：https://platform.deepseek.com/api_keys
+      model-name: deepseek-v4-flash #与 AgentDemo 配置保持一致（已验证可用）
+      log-requests: true #开发期打印请求/响应日志，便于排查工具调用与提示词效果
+      log-responses: true
+    streaming-chat-model: #流式模型：@AiService 的 streamingChatModel 引用，参数与 chat‑model 一致
+      enabled: true
+      base-url: https://api.deepseek.com/v1
+      api-key: ${DEEPSEEK_API_KEY:sk-YOUR_DEEPSEEK_API_KEY}
+      model-name: deepseek-v4-flash
+      log-requests: true
+      log-responses: true
+    embedding-model: #向量模型（RAG 检索增强用）：OpenAI 兼容协议指向阿里云百炼（DashScope）
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      api-key: ${DASHSCOPE_API_KEY:sk-YOUR_DASHSCOPE_API_KEY} #阿里云百炼控制台申请：https://bailian.console.aliyun.com
+      model-name: text-embedding-v4
+      log-requests: true
+      log-responses: true
+
+# RAG 检索增强（已启用）：知识库文档位于 resources/rag，启动时经 EmbeddingModelConfig 装配的向量模型
+# （text-embedding-v4）向量化后写入 Elasticsearch 向量索引（KnowledgeEsIndexService 全量重建，索引名见下方
+# elasticsearch.knowledge-index），检索经 EsKnowledgeContentRetriever 做 ES kNN 语义召回，
+# 与平台资料库关键词检索混合返回（见 application 上方 embedding-model 配置）
+agent:
+  rag:
+    enabled: true
+
+
+# Elasticsearch 检索（本机安装版本 9.5.5，Java Client 直连）：
+# - 商品索引：GoodsEsIndexService 启动时从 MySQL 全量同步（仅已上架商品），EsProductSearchNode 做关键词检索；
+# - 知识库索引：KnowledgeEsIndexService 启动时将 resources/rag 知识库文档向量化入库，EsKnowledgeContentRetriever 做 kNN 语义检索；
+# 若本机 ES 开启了安全认证（9.x 默认开启 security），请将 scheme 改为 https 并填写 username / password
+elasticsearch:
+  host: 127.0.0.1
+  port: 9200
+  scheme: http
+  username: ${ES_USERNAME:elastic}
+  password: ${ES_PASSWORD:}
+  index: mic_goods #商品检索索引名
+  knowledge-index: mic_study_knowledge #非遗知识库向量检索索引名（RAG 知识库文档向量化入库）
+
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.mic.agent.**.model.entity #通配符覆盖study / shop两个业务主题的实体包
+  configuration:
+    map-underscore-to-camel-case: true #下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #打印sql日志
+
+# Knife4j接口文档：访问 http://127.0.0.1:8042/doc.html
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# 日志：Feign 客户端接口打开 debug（与上方 logger‑level=basic 配合，输出跨服务调用详情）
+logging:
+  level:
+    com.mic.agent.study.feign: debug
+    # 商品 / 用户跨服务 Feign 调用（mic-goods / mic-user）：输出请求方法、URL、响应状态码与耗时，调用失败时定位
+    com.mic.agent.shop.feign: debug
